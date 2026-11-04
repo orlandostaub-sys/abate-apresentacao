@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Supervisório da Linha de Abate</title>
+<title>Supervisório Ganchos Vazios</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -11,7 +11,7 @@
 /* Layout: uma coluna de leitura; cada etapa é texto + uma peça viva ao lado, empilhando no celular.
    As cores dos ganchos são as mesmas do supervisório: verde, vermelho, âmbar, cinza-azulado. */
 :root {
-  --bg: #F1F3F6;
+  --bg: #FFFFFF;
   --surface: #FFFFFF;
   --ink: #17212D;
   --muted: #5B6777;
@@ -29,20 +29,8 @@
   --f-body: "Barlow", "Segoe UI", system-ui, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0E141C; --surface: #161F2A; --ink: #E5EAF0; --muted: #93A0B1; --line: #283445;
-    --accent: #6DA5E6; --trilho: #6F7D92; --carcaca: #D99C94; --carcaca-escuro: #B0716A;
-    --cheio: #33CC67; --vazio: #EC4A54; --pausa: #F2B23E; --fora: #7E8CA7; --semdado: #212D3C;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0E141C; --surface: #161F2A; --ink: #E5EAF0; --muted: #93A0B1; --line: #283445;
-  --accent: #6DA5E6; --trilho: #6F7D92; --carcaca: #D99C94; --carcaca-escuro: #B0716A;
-  --cheio: #33CC67; --vazio: #EC4A54; --pausa: #F2B23E; --fora: #7E8CA7; --semdado: #212D3C;
-  color-scheme: dark;
-}
+/* Sempre fundo branco, mesmo no celular em modo escuro. */
+:root { color-scheme: light; }
 
 * { box-sizing: border-box; }
 body {
@@ -270,7 +258,7 @@ footer { padding-block: 20px 40px; border-top: 1px solid var(--line); font-size:
 
   <header class="abertura">
     <p class="rotulo">Como o sistema funciona</p>
-    <h1>Supervisório da Linha de Abate</h1>
+    <h1>Supervisório Ganchos Vazios</h1>
     <p class="lead">Cada gancho que passa na nórea vira um quadradinho colorido num mapa. Desse mapa saem as pausas da linha, o tempo perdido e o relatório que chega por e-mail às 18h. Esta página mostra o caminho, passo a passo.</p>
 
     <div class="palco" aria-label="Animação da nórea: ganchos com e sem suíno passando pelos dois sensores">
