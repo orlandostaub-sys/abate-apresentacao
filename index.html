@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supervisório da Linha de Abate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: uma coluna de leitura; cada etapa é texto + uma peça viva ao lado, empilhando no celular.
+   As cores dos ganchos são as mesmas do supervisório: verde, vermelho, âmbar, cinza-azulado. */
+:root {
+  --bg: #F1F3F6;
+  --surface: #FFFFFF;
+  --ink: #17212D;
+  --muted: #5B6777;
+  --line: #D5DBE3;
+  --accent: #1F5FA8;
+  --trilho: #8693A6;
+  --carcaca: #EBB1A8;
+  --carcaca-escuro: #CF8479;
+  --cheio: #1FAF4E;
+  --vazio: #C9252F;
+  --pausa: #EBA22A;
+  --fora: #66738C;
+  --semdado: #E3E8EE;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --f-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E141C; --surface: #161F2A; --ink: #E5EAF0; --muted: #93A0B1; --line: #283445;
+    --accent: #6DA5E6; --trilho: #6F7D92; --carcaca: #D99C94; --carcaca-escuro: #B0716A;
+    --cheio: #33CC67; --vazio: #EC4A54; --pausa: #F2B23E; --fora: #7E8CA7; --semdado: #212D3C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E141C; --surface: #161F2A; --ink: #E5EAF0; --muted: #93A0B1; --line: #283445;
+  --accent: #6DA5E6; --trilho: #6F7D92; --carcaca: #D99C94; --carcaca-escuro: #B0716A;
+  --cheio: #33CC67; --vazio: #EC4A54; --pausa: #F2B23E; --fora: #7E8CA7; --semdado: #212D3C;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; line-height: 1.05; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.4rem, 7vw, 4.2rem); letter-spacing: 0.005em; }
+h2 { font-size: clamp(1.7rem, 4.2vw, 2.4rem); }
+p { margin: 0; }
+.rotulo {
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.fraco { color: var(--muted); }
+
+/* ---------------- abertura ---------------- */
+.abertura { padding-block: 40px 8px; display: grid; gap: 16px; }
+.abertura .lead { font-size: 1.2rem; max-width: 40em; color: var(--muted); }
+.palco {
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 14px 10px;
+  display: grid;
+  gap: 10px;
+}
+#norea { width: 100%; height: 238px; display: block; }
+.legenda { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.92rem; color: var(--muted); }
+.legenda span { display: inline-flex; align-items: center; gap: 7px; }
+.q { width: 12px; height: 12px; border-radius: 2px; display: inline-block; flex: none; }
+.q.cheio { background: var(--cheio); }
+.q.vazio { background: var(--vazio); }
+.q.pausa { background: var(--pausa); }
+.q.fora { background: var(--fora); }
+.q.semdado { background: var(--semdado); outline: 1px solid var(--line); }
+
+/* ---------------- etapas ---------------- */
+.etapas { display: grid; gap: 0; padding-block: 24px 8px; }
+.etapa {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 28px 40px;
+  padding-block: 40px;
+  border-top: 1px solid var(--line);
+  align-items: start;
+}
+.etapa.so-texto { grid-template-columns: minmax(0, 1fr); }
+.etapa-texto { display: grid; gap: 14px; min-width: 0; max-width: 36em; }
+.etapa-visual { min-width: 0; display: grid; gap: 12px; }
+.num {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 3.4rem;
+  line-height: 0.8;
+  color: var(--accent);
+}
+.cabeca { display: flex; align-items: flex-end; gap: 14px; }
+
+details {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+summary {
+  cursor: pointer;
+  font-family: var(--f-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; font-weight: 500; width: 1ch; }
+details[open] summary::before { content: "−"; }
+summary:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+.eng { display: grid; gap: 10px; margin-top: 12px; font-size: 0.95rem; color: var(--muted); }
+.eng ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.eng code { font-family: var(--f-mono); font-size: 0.88em; color: var(--ink); }
+
+.painel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.painel-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.painel-topo .rotulo { color: var(--muted); }
+
+/* etapa 2 — a fila do CLP */
+table.fila { width: 100%; border-collapse: collapse; font-family: var(--f-mono); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.fila th { text-align: left; font-weight: 500; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 8px 6px 0; border-bottom: 1px solid var(--line); }
+.fila td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.fila tr:last-child td { border-bottom: 0; }
+.fila tr.novo td { animation: chegou 0.6s ease-out; }
+@keyframes chegou { from { background: color-mix(in srgb, var(--accent) 18%, transparent); } to { background: transparent; } }
+.fila .estado { display: inline-flex; align-items: center; gap: 8px; }
+
+/* etapa 3 — o mapa ao vivo */
+#mapa { width: 100%; display: block; }
+.placar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.placar div { display: grid; gap: 2px; }
+.placar b { font-family: var(--f-display); font-size: 1.7rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.placar small { font-size: 0.8rem; color: var(--muted); }
+.pulso { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 0.85rem; color: var(--muted); }
+.pulso i { width: 8px; height: 8px; border-radius: 50%; background: var(--cheio); opacity: 0.25; transition: opacity 0.15s; }
+.pulso i.aceso { opacity: 1; }
+
+/* etapa 4 — as regras */
+.cenarios { display: flex; flex-wrap: wrap; gap: 8px; }
+.cenarios button {
+  font: 500 0.92rem var(--f-body);
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.cenarios button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.faixa { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); gap: 3px; }
+.faixa span { aspect-ratio: 1; border-radius: 2px; background: var(--semdado); max-width: 100%; transition: background-color 0.35s; }
+.faixa span.cheio { background: var(--cheio); }
+.faixa span.vazio { background: var(--vazio); }
+.faixa span.pausa { background: var(--pausa); }
+.faixa span.fora { background: var(--fora); }
+.faixa span.falso { box-shadow: inset 0 0 0 2px var(--ink); }
+.faixa-titulo { font-size: 0.85rem; color: var(--muted); display: flex; justify-content: space-between; gap: 10px; }
+.chave { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; cursor: pointer; }
+.chave input { width: 18px; height: 18px; accent-color: var(--accent); }
+.explica { font-size: 0.98rem; min-height: 4.6em; }
+
+/* etapa 5 — a conta */
+.conta { display: grid; gap: 14px; }
+.campo { display: grid; gap: 6px; }
+.campo label { font-size: 0.9rem; color: var(--muted); display: flex; justify-content: space-between; }
+.campo input[type="range"] { width: 100%; accent-color: var(--vazio); }
+.resultado { font-family: var(--f-display); font-weight: 700; font-size: clamp(2.6rem, 9vw, 3.6rem); line-height: 1; font-variant-numeric: tabular-nums; }
+.formula { font-family: var(--f-mono); font-size: 0.9rem; color: var(--muted); overflow-wrap: anywhere; }
+
+/* etapa 6 — duas memórias */
+.memorias { display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); align-items: stretch; gap: 0; }
+.memoria { border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 6px; background: var(--surface); align-content: start; }
+.memoria h3 { font-size: 1.35rem; }
+.memoria p { font-size: 0.92rem; color: var(--muted); }
+.cano { position: relative; overflow: hidden; }
+.cano::before { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; border-top: 2px dashed var(--line); }
+.cano i { position: absolute; top: calc(50% - 4px); left: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: corre 1.8s linear infinite; }
+.cano i:nth-child(2) { animation-delay: 0.6s; }
+.cano i:nth-child(3) { animation-delay: 1.2s; }
+@keyframes corre { from { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { transform: translateX(48px); opacity: 0; } }
+.dias { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.dias div { display: grid; gap: 4px; justify-items: center; font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted); }
+.dias canvas { width: 100%; max-width: 100%; aspect-ratio: 6 / 5; display: block; border-radius: 2px; }
+
+/* etapa 7 — o dia e o e-mail */
+.regua { position: relative; height: 34px; }
+.regua .faixa-dia { position: absolute; left: 0; right: 0; top: 14px; height: 6px; border-radius: 3px; background: var(--semdado); }
+.regua .trecho { position: absolute; top: 14px; height: 6px; border-radius: 3px; }
+.regua .marco { position: absolute; top: 9px; width: 2px; height: 16px; background: var(--muted); }
+.regua .agulha { position: absolute; top: 2px; width: 2px; height: 30px; background: var(--accent); }
+.regua .agulha::after { content: attr(data-hora); position: absolute; top: -2px; left: 6px; font-family: var(--f-mono); font-size: 0.72rem; color: var(--accent); white-space: nowrap; }
+.horas-regua { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted); }
+ol.eventos { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.eventos li { display: grid; grid-template-columns: 7.2em minmax(0, 1fr); gap: 10px; padding: 7px 10px; border-radius: 4px; transition: background-color 0.3s; }
+.eventos li .mono { color: var(--muted); font-size: 0.88rem; padding-top: 1px; }
+.eventos li.ativo { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.eventos li.ativo .mono { color: var(--accent); }
+.email {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 0.95rem;
+  display: grid;
+}
+.email header { padding: 10px 14px; border-bottom: 1px solid var(--line); display: grid; gap: 2px; font-size: 0.85rem; color: var(--muted); }
+.email header b { color: var(--ink); font-weight: 600; font-size: 0.95rem; }
+.email .corpo { padding: 14px; display: grid; gap: 12px; }
+.email .corpo h4 { margin: 0; font: 600 0.82rem var(--f-mono); letter-spacing: 0.06em; }
+.email .anexos { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 14px; }
+.email .anexos span { font-family: var(--f-mono); font-size: 0.78rem; border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; color: var(--muted); }
+
+/* ---------------- números ---------------- */
+.numeros { padding-block: 40px; border-top: 1px solid var(--line); display: grid; gap: 22px; }
+.numeros ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px 20px; }
+.numeros li { display: grid; gap: 4px; align-content: start; }
+.numeros b { font-family: var(--f-display); font-size: 2.6rem; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.numeros li span { font-size: 0.92rem; color: var(--muted); }
+footer { padding-block: 20px 40px; border-top: 1px solid var(--line); font-size: 0.85rem; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .etapa { grid-template-columns: minmax(0, 1fr); padding-block: 32px; }
+  .memorias { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 40px auto; }
+  .cano::before { left: 50%; right: auto; top: 4px; bottom: 4px; border-top: 0; border-left: 2px dashed var(--line); }
+  .cano i { left: calc(50% - 3px); top: 0; animation-name: desce; }
+  @keyframes desce { from { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { transform: translateY(32px); opacity: 0; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cano i { animation: none; opacity: 0; }
+  .fila tr.novo td { animation: none; }
+  .faixa span, .eventos li { transition: none; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="abertura">
+    <p class="rotulo">Como o sistema funciona</p>
+    <h1>Supervisório da Linha de Abate</h1>
+    <p class="lead">Cada gancho que passa na nórea vira um quadradinho colorido num mapa. Desse mapa saem as pausas da linha, o tempo perdido e o relatório que chega por e-mail às 18h. Esta página mostra o caminho, passo a passo.</p>
+
+    <div class="palco" aria-label="Animação da nórea: ganchos com e sem suíno passando pelos dois sensores">
+      <canvas id="norea" role="img" aria-label="Ganchos passando pelo sensor do gancho e pelo sensor do suíno e entrando no mapa, verde quando há suíno e vermelho quando o gancho está vazio"></canvas>
+      <div class="legenda">
+        <span><i class="q cheio"></i>suíno no gancho</span>
+        <span><i class="q vazio"></i>gancho vazio</span>
+        <span><i class="q pausa"></i>pausa da linha</span>
+        <span><i class="q fora"></i>depois do abate</span>
+        <span><i class="q semdado"></i>ainda não passou</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="etapas">
+
+    <!-- 1 -->
+    <section class="etapa so-texto" aria-labelledby="t1">
+      <div class="etapa-texto">
+        <div class="cabeca"><span class="num">1</span><p class="rotulo">Na nórea</p></div>
+        <h2 id="t1">Dois sensores conferem cada gancho</h2>
+        <p>A nórea leva os ganchos um atrás do outro. Num ponto fixo da linha há dois sensores, um em cima do outro: <strong>o de cima enxerga o gancho</strong>, <strong>o de baixo enxerga o suíno</strong>.</p>
+        <p>Cada vez que o sensor do gancho acusa, o sistema confere o outro. Se o suíno também está lá, o quadradinho fica verde. Se o gancho chegou e o suíno não, o gancho passou vazio e o quadradinho fica vermelho.</p>
+        <p>É o que a animação acima mostra: os dois sensores acendendo, a conferência embaixo deles e o mapa crescendo.</p>
+        <details>
+          <summary>Para a engenharia</summary>
+          <div class="eng">
+            <ul>
+              <li>O sensor do gancho avança uma posição num vetor de 3000 posições no CLP (CompactLogix). O ladder para de contar antes do fim do vetor e só conta das 7h às 17h.</li>
+              <li>Na mesma posição, o ladder confere o sensor do suíno: com suíno, grava <code>1</code>; gancho sem suíno, grava <code>2</code>. O código <code>3</code> aparece quando os dois bits ligam na mesma posição (o sinal do suíno chegou atrasado) e o supervisório o trata como suíno.</li>
+              <li>São duas nóreas independentes, sangria e evisceração, cada uma com os seus vetores.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="etapa" aria-labelledby="t2">
+      <div class="etapa-texto">
+        <div class="cabeca"><span class="num">2</span><p class="rotulo">No CLP</p></div>
+        <h2 id="t2">O CLP anota cada gancho com a hora</h2>
+        <p>O CLP é o computador industrial que comanda a linha. Ele guarda uma fila com todos os ganchos do dia: a posição, se veio cheio ou vazio, e o horário exato em que passou.</p>
+        <p>Todo dia às <strong>7h01</strong> essa fila é zerada e o dia começa do zero.</p>
+        <details>
+          <summary>Para a engenharia</summary>
+          <div class="eng">
+            <ul>
+              <li>Seis vetores paralelos de 3000 posições: o estado e mais cinco para o carimbo (mês, dia, hora, minuto e segundo). O ano completa-se pela data do dia.</li>
+              <li>O reset das 7h01 zera os seis vetores. Da meia-noite até lá o CLP ainda carrega o dia anterior inteiro; o supervisório descarta qualquer posição cujo carimbo não seja do dia que está lendo.</li>
+              <li>Posição com estado e ainda sem carimbo continua valendo: o CLP escreve o estado e a hora em rungs diferentes, e a leitura pode cair entre os dois.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+      <div class="etapa-visual">
+        <div class="painel">
+          <div class="painel-topo"><span class="rotulo">Fila do CLP · últimos ganchos</span><span class="mono fraco" id="filaTotal">—</span></div>
+          <table class="fila" aria-live="off">
+            <thead><tr><th>Posição</th><th>Código</th><th>Hora</th></tr></thead>
+            <tbody id="filaCorpo"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="etapa" aria-labelledby="t3">
+      <div class="etapa-texto">
+        <div class="cabeca"><span class="num">3</span><p class="rotulo">No computador</p></div>
+        <h2 id="t3">O supervisório lê a fila a cada 2 segundos</h2>
+        <p>O programa no computador da sala conversa com o CLP pela rede e lê a fila inteira a cada 2 segundos, mais ou menos. A cada leitura, o mapa da tela é redesenhado: 3000 quadradinhos, um para cada gancho do dia.</p>
+        <p>Ao lado, um dia inteiro passando em menos de um minuto. Repare na hora do almoço: os vazios começam vermelhos e, quando chegam a 30 seguidos, a fileira toda vira pausa.</p>
+        <details>
+          <summary>Para a engenharia</summary>
+          <div class="eng">
+            <ul>
+              <li>Comunicação EtherNet/IP direta com o CLP (biblioteca libplctag), sem servidor OPC no meio.</li>
+              <li>O vetor de estado é lido a cada volta (cerca de 1,9 s). Os cinco vetores de hora são lidos a cada 30 s, porque a leitura completa leva uns 9 s. As duas nóreas são lidas defasadas, para não pesarem na mesma volta.</li>
+              <li>A cada volta o supervisório grava no banco só as posições que mudaram desde a última gravação.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+      <div class="etapa-visual">
+        <div class="painel">
+          <div class="painel-topo">
+            <span class="rotulo">Mapa do dia · acelerado</span>
+            <span class="pulso"><i id="pulso"></i><span id="relogioMapa">07:00</span></span>
+          </div>
+          <canvas id="mapa" role="img" aria-label="Mapa de um dia de exemplo sendo preenchido gancho a gancho"></canvas>
+          <div class="placar">
+            <div><b id="pCheios">0</b><small>suínos</small></div>
+            <div><b id="pVazios">0</b><small>vazios (vermelho)</small></div>
+            <div><b id="pPausas">0</b><small>pausas</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="etapa" aria-labelledby="t4">
+      <div class="etapa-texto">
+        <div class="cabeca"><span class="num">4</span><p class="rotulo">As regras</p></div>
+        <h2 id="t4">Cada vazio recebe uma cor pelo que ele significa</h2>
+        <p>Um gancho vazio pode querer dizer coisas diferentes. Um vazio solto é um suíno que faltou. Uma fileira longa de vazios é a linha parada. Depois das 16h, é a nórea girando depois que o abate acabou.</p>
+        <p>Escolha uma situação ao lado e compare o que o sensor viu com o que o sistema mostra. Na lavagem, desligue o filtro para ver o problema que ele resolve.</p>
+        <details>
+          <summary>Para a engenharia</summary>
+          <div class="eng">
+            <ul>
+              <li><strong>Pausa:</strong> 30 ou mais vazios seguidos. A duração vem do relógio do CLP, do primeiro ao último gancho da sequência, e não de estimativa.</li>
+              <li><strong>Depois do abate:</strong> sequência que começa a partir das 16h. Não entra na lista de pausas nem no tempo perdido. Os vazios depois do último suíno do dia, a partir das 16h, entram aqui com qualquer tamanho.</li>
+              <li><strong>Sinal falso:</strong> até 2 posições (verde do jato d'água ou posição apagada) com pelo menos 5 vazios de cada lado, somando 30, fazem parte da parada. No último gancho do dia, até 2 verdes depois de 5 ou mais vazios das 16h em diante também.</li>
+              <li><strong>Nórea parada:</strong> se o gancho vizinho da pausa passou mais de 2 min antes (ou depois), esse tempo entra na pausa. É o almoço em que a nórea para sozinha e nenhum gancho passa para ser anotado.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+      <div class="etapa-visual">
+        <div class="painel">
+          <div class="cenarios" role="group" aria-label="Situação">
+            <button type="button" data-cenario="andando" aria-pressed="true">Linha andando</button>
+            <button type="button" data-cenario="parada" aria-pressed="false">Linha parada</button>
+            <button type="button" data-cenario="jato" aria-pressed="false">Lavagem</button>
+            <button type="button" data-cenario="fim" aria-pressed="false">Fim do dia</button>
+          </div>
+          <div class="faixa-titulo"><span>O que o sensor viu</span></div>
+          <div class="faixa" id="faixaBruta" aria-hidden="true"></div>
+          <div class="faixa-titulo"><span>O que o sistema mostra</span><span class="mono" id="horaCenario"></span></div>
+          <div class="faixa" id="faixaFinal" aria-hidden="true"></div>
+          <label class="chave" for="filtro"><input type="checkbox" id="filtro" checked> Filtro de sinal falso</label>
+          <p class="explica" id="explica" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="etapa" aria-labelledby="t5">
+      <div class="etapa-texto">
+        <div class="cabeca"><span class="num">5</span><p class="rotulo">A conta</p></div>
+        <h2 id="t5">Os vermelhos viram tempo perdido</h2>
+        <p>Só os vazios vermelhos entram na conta. A pergunta é: quanto tempo a linha levaria para fazer os suínos que faltaram? Com a linha a 318 suínos por hora, passam 5,3 suínos por minuto. Divide-se o número de vazios por isso.</p>
+        <p>Pausas e o fim do dia ficam fora: ali ninguém deixou de pendurar, a linha estava parada ou o abate já tinha terminado.</p>
+        <details>
+          <summary>Para a engenharia</summary>
+          <div class="eng">
+            <ul>
+              <li><code>tempo perdido = vazios ÷ (taxa ÷ 60)</code>, a mesma conta do sistema antigo, para o histórico continuar comparável.</li>
+              <li>A taxa é editável na tela. Ela muda o tempo perdido, mas não a duração das pausas, que vem do relógio do CLP.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+      <div class="etapa-visual">
+        <div class="painel conta">
+          <div class="campo">
+            <label for="vazios"><span>Ganchos vazios no dia</span><span class="mono" id="vaziosValor">120</span></label>
+            <input type="range" id="vazios" min="0" max="400" step="1" value="120">
+          </div>
+          <div class="campo">
+            <label for="taxa"><span>Taxa da linha (suínos por hora)</span><span class="mono" id="taxaValor">318</span></label>
+            <input type="range" id="taxa" min="200" max="400" step="1" value="318">
+          </div>
+          <div>
+            <span class="rotulo">Tempo perdido</span>
+            <div class="resultado"><span id="perdido">22,6</span> <span style="font-size:0.5em">min</span></div>
+          </div>
+          <p class="formula" id="formula"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="etapa" aria-labelledby="t6">
+      <div class="etapa-texto">
+        <div class="cabeca"><span class="num">6</span><p class="rotulo">O histórico</p></div>
+        <h2 id="t6">Tudo fica guardado no computador</h2>
+        <p>O CLP só lembra do dia de hoje. Por isso o supervisório copia cada gancho para um banco de dados no computador, enquanto o dia acontece. Assim dá para abrir qualquer dia passado, ver o mapa, as pausas, e gerar o PDF de novo.</p>
+        <p>Cada pessoa entra com o próprio usuário e senha. O perfil decide o que ela pode fazer: consultar, gerar relatório, corrigir posições erradas ou cadastrar usuários.</p>
+        <details>
+          <summary>Para a engenharia</summary>
+          <div class="eng">
+            <ul>
+              <li>Banco SQLite local, na pasta do programa, em modo WAL (leitura e gravação ao mesmo tempo sem travar a tela).</li>
+              <li>O histórico do sistema antigo (Firebird) foi importado para o mesmo banco.</li>
+              <li>Senhas dos usuários guardadas com hash BCrypt. Nenhuma senha fica em texto.</li>
+              <li>Posições podem ser excluídas pelo histórico; o mapa e as pausas são recalculados na hora, porque as regras rodam toda vez que o dia é montado.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+      <div class="etapa-visual">
+        <div class="memorias">
+          <div class="memoria">
+            <span class="rotulo">CLP</span>
+            <h3>Só o dia de hoje</h3>
+            <p>Zera às 7h01. O dia anterior some da memória.</p>
+          </div>
+          <div class="cano" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="memoria">
+            <span class="rotulo">Computador</span>
+            <h3>Todos os dias</h3>
+            <p>Mapa, pausas e relatório de qualquer data.</p>
+          </div>
+        </div>
+        <div class="painel">
+          <span class="rotulo" style="color:var(--muted)">Uma semana no histórico · exemplo</span>
+          <div class="dias" id="dias"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="etapa" aria-labelledby="t7">
+      <div class="etapa-texto">
+        <div class="cabeca"><span class="num">7</span><p class="rotulo">O relatório</p></div>
+        <h2 id="t7">Às 18h o relatório chega por e-mail</h2>
+        <p>Ninguém precisa lembrar de mandar. Às 18h o sistema monta um PDF para cada nórea, com os números do dia, a lista de pausas e o mapa completo, e envia os dois num e-mail só.</p>
+        <p>Se a internet falhar, ele tenta de novo a cada 10 minutos até as 20h.</p>
+        <details>
+          <summary>Para a engenharia</summary>
+          <div class="eng">
+            <ul>
+              <li>O PDF é desenhado pelo próprio programa (A4, mapa de 60 × 50) e impresso pela impressora "Microsoft Print to PDF" do Windows, sem biblioteca externa.</li>
+              <li>Envio por SMTP com TLS. A senha do e-mail fica criptografada pelo Windows (DPAPI) e nunca aparece em arquivo nem em registro.</li>
+              <li>Um envio manual durante o dia não cancela o das 18h: só conta como entregue o que saiu a partir das 18h.</li>
+              <li>Programa em .NET 8, instalado por um instalador próprio que preserva o banco e a configuração nas atualizações.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+      <div class="etapa-visual">
+        <div class="painel">
+          <div class="regua" id="regua">
+            <div class="faixa-dia"></div>
+          </div>
+          <div class="horas-regua"><span>06h</span><span>09h</span><span>12h</span><span>15h</span><span>18h</span><span>21h</span></div>
+          <ol class="eventos" id="eventos">
+            <li data-de="7.02" data-ate="7.6"><span class="mono">07:01</span><span>O CLP zera a fila. O dia começa.</span></li>
+            <li data-de="7.6" data-ate="16"><span class="mono">07h–16h</span><span>Abate. Cada gancho entra no mapa; as pausas aparecem sozinhas.</span></li>
+            <li data-de="16" data-ate="18"><span class="mono">16:00</span><span>Daqui em diante, vazio no fim do dia é "depois do abate".</span></li>
+            <li data-de="18" data-ate="18.5"><span class="mono">18:00</span><span>Saem os dois PDFs por e-mail.</span></li>
+            <li data-de="18.5" data-ate="20"><span class="mono">até 20:00</span><span>Se o envio falhar, nova tentativa a cada 10 min.</span></li>
+          </ol>
+        </div>
+        <div class="email" aria-label="Exemplo do e-mail diário">
+          <header>
+            <b>Ganchos vazios — quinta-feira</b>
+            <span>Enviado automaticamente às 18:00 · números de exemplo</span>
+          </header>
+          <div class="corpo">
+            <div><h4>EVISCERAÇÃO</h4>Tempo perdido: 22,6 min (120 ganchos vazios)<br>Pausas: 5, somando 131 min<br>Produção: 2.000 suínos</div>
+            <div><h4>SANGRIA</h4>Tempo perdido: 24,0 min (127 ganchos vazios)<br>Pausas: 5, somando 135 min<br>Produção: 1.940 suínos</div>
+            <p class="fraco">Mapa do dia e horário de cada pausa nos PDFs em anexo.</p>
+          </div>
+          <div class="anexos"><span>Evisceracao.pdf</span><span>Sangria.pdf</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <section class="numeros" aria-labelledby="tn">
+    <h2 id="tn">Em números</h2>
+    <ul>
+      <li><b>3.000</b><span>posições por nórea, por dia</span></li>
+      <li><b>2 s</b><span>entre uma leitura e outra do CLP</span></li>
+      <li><b>30</b><span>vazios seguidos para virar pausa</span></li>
+      <li><b>16h</b><span>a partir daqui, vazio é fim do abate</span></li>
+      <li><b>18h</b><span>relatório no e-mail, sem ninguém clicar</span></li>
+    </ul>
+  </section>
+
+  <footer>Os mapas, horários e números desta página são de exemplo, montados para explicar o funcionamento.</footer>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const raiz = document.documentElement;
+  const cor = (nome) => getComputedStyle(raiz).getPropertyValue("--" + nome).trim();
+  const reduzido = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fmt1 = (x) => x.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const hhmm = (min) => {
+    const h = Math.floor(min / 60), m = Math.floor(min % 60);
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+  };
+
+  // ======================================================================
+  //  AS REGRAS DO SUPERVISÓRIO, reproduzidas aqui
+  //  raw: "C" suíno, "V" vazio, "S" sem registro · minutos: hora de cada posição
+  // ======================================================================
+  const MIN_PAUSA = 30, MAX_INTERRUPCAO = 2, MIN_LADO = 5, CORTE = 16 * 60;
+
+  function classificar(raw, minutos, filtro) {
+    const n = raw.length;
+    let ultima = -1;
+    for (let k = n - 1; k >= 0; k--) if (raw[k] !== "S") { ultima = k; break; }
+    const out = new Array(n).fill("semdado");
+    if (ultima < 0) return out;
+
+    const parado = raw.map((r, k) => k <= ultima && r === "V");
+    const vaziosSeguidos = (desde, passo) => {
+      let c = 0;
+      for (let k = desde; k >= 0 && k <= ultima && parado[k]; k += passo) if (raw[k] === "V") c++;
+      return c;
+    };
+    const comecoDaCorrida = (desde) => { let k = desde; while (k > 0 && parado[k - 1]) k--; return k; };
+
+    if (filtro) {
+      let mudou = true;
+      while (mudou) {
+        mudou = false;
+        let i = 0;
+        while (i <= ultima) {
+          if (parado[i]) { i++; continue; }
+          const ini = i;
+          while (i <= ultima && !parado[i]) i++;
+          const fim = i - 1;
+          if (ini === 0 || fim - ini + 1 > MAX_INTERRUPCAO) continue;
+          const esq = vaziosSeguidos(ini - 1, -1);
+          if (i > ultima) {
+            if (esq < MIN_LADO || minutos[comecoDaCorrida(ini - 1)] < CORTE) continue;
+          } else {
+            const dir = vaziosSeguidos(fim + 1, 1);
+            if (esq < MIN_LADO || dir < MIN_LADO || esq + dir < MIN_PAUSA) continue;
+          }
+          for (let k = ini; k <= fim; k++) parado[k] = true;
+          mudou = true;
+        }
+      }
+    }
+
+    const marca = new Array(n).fill(null);
+    let i = 0;
+    while (i <= ultima) {
+      if (!parado[i]) { i++; continue; }
+      const ini = i;
+      let vazios = 0;
+      while (i <= ultima && parado[i]) { if (raw[i] === "V") vazios++; i++; }
+      const fim = i - 1;
+      const fora = minutos[ini] >= CORTE;
+      const rabo = filtro && fim === ultima && fora;
+      if (vazios < MIN_PAUSA && !rabo) continue;
+      for (let k = ini; k <= fim; k++) marca[k] = fora ? "fora" : "pausa";
+    }
+
+    for (let k = 0; k <= ultima; k++) {
+      if (raw[k] === "S") continue;
+      if (marca[k]) out[k] = raw[k] === "C" ? marca[k] + " falso" : marca[k];
+      else out[k] = raw[k] === "C" ? "cheio" : "vazio";
+    }
+    return out;
+  }
+
+  const corDaClasse = (c) => cor(c.split(" ")[0]);
+
+  // ======================================================================
+  //  1 · A NÓREA
+  // ======================================================================
+  const tela = document.getElementById("norea");
+  const g = tela.getContext("2d");
+  const ALTURA = 238, ESPACO = 60, VELOCIDADE = 72;
+  let largura = 0;
+
+  function medirNorea() {
+    const dpr = window.devicePixelRatio || 1;
+    largura = tela.clientWidth;
+    tela.width = Math.round(largura * dpr);
+    tela.height = Math.round(ALTURA * dpr);
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function sorteio(n) {
+    let x = Math.imul(n + 1, 2654435761) >>> 0;
+    x ^= x >>> 16; x = Math.imul(x, 2246822507) >>> 0; x ^= x >>> 13;
+    return x >>> 0;
+  }
+  // Um vazio de vez em quando, e a cada ~100 ganchos uma falha de pendura de 6 seguidos.
+  const estadoDoGancho = (n) => (n % 101 >= 95 || sorteio(n) % 100 < 7) ? "V" : "C";
+
+  const sensorX = () => Math.round(largura * 0.6);
+  const faixaNorea = [];
+  let deslocamento = null, ultimoEmitido = -1, flash = 0, flashCor = "", ultimoEstado = "", inicio = performance.now(), antes = inicio;
+  const ouvintes = [];
+
+  function emitir(n) {
+    const estado = estadoDoGancho(n);
+    faixaNorea.push({ estado, t: performance.now() });
+    if (faixaNorea.length > 200) faixaNorea.shift();
+    flash = performance.now();
+    flashCor = estado === "C" ? "cheio" : "vazio";
+    ultimoEstado = estado;
+    ouvintes.forEach((f) => f(n, estado));
+  }
+
+  // O suíno pendurado pelas patas de trás no gancho, de cabeça para baixo: a silhueta
+  // desenhada pelo autor, guardada só como recorte (sem cor) e pintada com a cor do tema.
+  const SUINO = new Image();
+  SUINO.src = "data:image/png;base64,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";
+  const SUINO_ALT = 118, SUINO_LARG = SUINO_ALT * 88 / 260, SUINO_PATAS = 40 / 88, SUINO_TOPO = 51;
+  const suinoPintado = {};
+  function suinoNaCor(corpo) {
+    if (!SUINO.complete || !SUINO.naturalWidth) return null;
+    if (!suinoPintado[corpo]) {
+      const c = document.createElement("canvas");
+      c.width = SUINO.naturalWidth; c.height = SUINO.naturalHeight;
+      const k = c.getContext("2d");
+      k.drawImage(SUINO, 0, 0);
+      k.globalCompositeOperation = "source-in";
+      k.fillStyle = corpo; k.fillRect(0, 0, c.width, c.height);
+      suinoPintado[corpo] = c;
+    }
+    return suinoPintado[corpo];
+  }
+  function desenharSuino(x, corpo) {
+    const img = suinoNaCor(corpo);
+    if (img) g.drawImage(img, x - SUINO_LARG * SUINO_PATAS, SUINO_TOPO, SUINO_LARG, SUINO_ALT);
+  }
+
+  // Um sensor fotoelétrico: a caixa e a lente, que acende quando enxerga alguma coisa.
+  function desenharSensor(x, y, brilho, tinta, apagado) {
+    if (brilho) {
+      g.fillStyle = brilho; g.globalAlpha = 0.3;
+      g.beginPath(); g.arc(x, y, 13, 0, Math.PI * 2); g.fill();
+      g.globalAlpha = 1;
+    }
+    g.fillStyle = tinta;
+    g.beginPath(); g.roundRect(x - 9, y - 6, 18, 12, 3); g.fill();
+    g.fillStyle = brilho || apagado;
+    g.beginPath(); g.arc(x, y, 3, 0, Math.PI * 2); g.fill();
+  }
+
+  function desenharNorea(agora) {
+    if (largura === 0) return;
+    const sx = sensorX();
+    if (deslocamento === null) {
+      deslocamento = sx + ESPACO * 14 + 1;
+      const passou = Math.floor((deslocamento - sx) / ESPACO);
+      for (let n = 0; n <= passou; n++) { faixaNorea.push({ estado: estadoDoGancho(n), t: 0 }); ouvintes.forEach((f) => f(n, estadoDoGancho(n), true)); }
+      ultimoEmitido = passou;
+    }
+
+    const dt = Math.min(0.1, (agora - antes) / 1000);
+    antes = agora;
+    if (reduzido) {
+      const alvo = sx + ESPACO * 14 + 1 + Math.floor((agora - inicio) / 1600) * ESPACO;
+      deslocamento = Math.max(deslocamento, alvo);
+    } else {
+      deslocamento += VELOCIDADE * dt;
+    }
+
+    while (ultimoEmitido < Math.floor((deslocamento - sx) / ESPACO)) emitir(++ultimoEmitido);
+
+    g.clearRect(0, 0, largura, ALTURA);
+    const cTrilho = cor("trilho"), cCarcaca = cor("carcaca"), cEscuro = cor("carcaca-escuro"),
+          cMuted = cor("muted"), cInk = cor("ink"), cLine = cor("line");
+
+    // trilho
+    g.strokeStyle = cTrilho; g.lineWidth = 3;
+    g.beginPath(); g.moveTo(0, 26); g.lineTo(largura, 26); g.stroke();
+
+    // ganchos: carrinho no trilho, haste e a travessa que prende as patas
+    const nMin = Math.max(0, Math.ceil((deslocamento - largura - ESPACO) / ESPACO));
+    const nMax = Math.floor((deslocamento + ESPACO) / ESPACO);
+    for (let n = nMin; n <= nMax; n++) {
+      const x = deslocamento - n * ESPACO;
+      g.fillStyle = cTrilho;
+      g.beginPath(); g.arc(x, 26, 4.5, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = cTrilho; g.lineWidth = 2;
+      g.beginPath();
+      g.moveTo(x, 30); g.lineTo(x, 53);
+      g.moveTo(x - 10, 50); g.lineTo(x - 10, 54); g.lineTo(x + 10, 54); g.lineTo(x + 10, 50);
+      g.stroke();
+      if (estadoDoGancho(n) === "C") desenharSuino(x, cCarcaca);
+    }
+
+    // os dois sensores, no mesmo ponto da linha: um na altura do gancho, outro na do suíno
+    const aceso = agora - flash < 500;
+    desenharSensor(sx, 41, aceso ? cor("accent") : null, cInk, cLine);
+    desenharSensor(sx, 108, aceso && ultimoEstado === "C" ? cor("cheio") : null, cInk, cLine);
+
+    // a conferência: o gancho chegou, o suíno estava nele?
+    g.font = "12px " + cor("f-mono"); g.textBaseline = "alphabetic";
+    if (ultimoEstado) {
+      const temSuino = ultimoEstado === "C";
+      const a = "gancho ✓  suíno " + (temSuino ? "✓" : "✗") + "  → ";
+      const b = temSuino ? "conta suíno" : "gancho vazio";
+      const wa = g.measureText(a).width, wb = g.measureText(b).width;
+      const x0 = Math.max(0, Math.min(largura - wa - wb, sx - (wa + wb) / 2));
+      g.textAlign = "left";
+      g.fillStyle = cMuted; g.fillText(a, x0, 190);
+      g.fillStyle = cor(temSuino ? "cheio" : "vazio"); g.fillText(b, x0 + wa, 190);
+    }
+
+    // mapa crescendo
+    const lado = 12, passo = 15, caber = Math.max(1, Math.floor(largura / passo));
+    const ultimos = faixaNorea.slice(-caber);
+    const x0 = largura - ultimos.length * passo + (passo - lado);
+    ultimos.forEach((c, k) => {
+      const novo = agora - c.t;
+      const escala = c.t && novo < 220 && !reduzido ? 0.4 + 0.6 * (novo / 220) : 1;
+      const s = lado * escala, x = x0 + k * passo + (lado - s) / 2, y = 214 + (lado - s) / 2;
+      g.fillStyle = cor(c.estado === "C" ? "cheio" : "vazio");
+      g.fillRect(x, y, s, s);
+    });
+    g.textAlign = "left"; g.fillStyle = cMuted;
+    g.fillText("mapa", 0, 207);
+  }
+
+  // ======================================================================
+  //  2 · A FILA DO CLP
+  // ======================================================================
+  const filaCorpo = document.getElementById("filaCorpo");
+  const filaTotal = document.getElementById("filaTotal");
+  const PASSO_S = 3600 / 318;
+  const horaDoGancho = (n) => {
+    const s = Math.round(7 * 3600 + 70 + n * PASSO_S);
+    const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+    return [h, m, ss].map((v) => String(v).padStart(2, "0")).join(":");
+  };
+  ouvintes.push((n, estado, inicial) => {
+    const tr = document.createElement("tr");
+    if (!inicial) tr.className = "novo";
+    const codigo = estado === "C" ? "1 · suíno" : "2 · vazio";
+    tr.innerHTML = `<td>${String(n + 1).padStart(4, "0")}</td><td><span class="estado"><i class="q ${estado === "C" ? "cheio" : "vazio"}"></i>${codigo}</span></td><td>${horaDoGancho(n)}</td>`;
+    filaCorpo.prepend(tr);
+    while (filaCorpo.rows.length > 6) filaCorpo.deleteRow(-1);
+    filaTotal.textContent = `${n + 1} de 3000`;
+  });
+
+  // ======================================================================
+  //  3 · O MAPA DO DIA (exemplo)
+  // ======================================================================
+  const DIA = (() => {
+    const raw = [];
+    const trechos = [["P", 170], ["V", 32], ["P", 218], ["V", 34], ["P", 108], ["V", 33], ["C", 1], ["V", 36],
+                     ["P", 270], ["V", 32], ["P", 36], ["V", 22], ["C", 1]];
+    for (const [tipo, qtd] of trechos)
+      for (let k = 0; k < qtd; k++)
+        raw.push(tipo === "P" ? (sorteio(raw.length * 7 + 3) % 100 < 5 ? "V" : "C") : tipo);
+    while (raw.length < 1000) raw.push("S");
+    const minutos = raw.map((_, k) => 7 * 60 + k * 0.58);
+    return { raw, minutos, ultima: raw.lastIndexOf("C") };
+  })();
+
+  const mapa = document.getElementById("mapa");
+  const gm = mapa.getContext("2d");
+  const COLS = 40, LINHAS = 25;
+  let revelado = 0, ladoMapa = 8;
+
+  function medirMapa() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = mapa.clientWidth;
+    ladoMapa = Math.max(4, Math.floor(w / COLS));
+    const h = ladoMapa * LINHAS;
+    mapa.style.height = h + "px";
+    mapa.width = Math.round(w * dpr);
+    mapa.height = Math.round(h * dpr);
+    gm.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function desenharMapa() {
+    const raw = DIA.raw.map((r, k) => k < revelado ? r : "S");
+    const classes = classificar(raw, DIA.minutos, true);
+    const w = mapa.clientWidth;
+    const x0 = Math.floor((w - ladoMapa * COLS) / 2);
+    const vao = ladoMapa >= 7 ? 1 : 0;
+    gm.clearRect(0, 0, w, ladoMapa * LINHAS);
+    const tinta = { cheio: cor("cheio"), vazio: cor("vazio"), pausa: cor("pausa"), fora: cor("fora"), semdado: cor("semdado") };
+    let cheios = 0, vazios = 0, pausas = 0, anterior = "";
+    classes.forEach((c, k) => {
+      const base = c.split(" ")[0];
+      gm.fillStyle = tinta[base];
+      gm.fillRect(x0 + (k % COLS) * ladoMapa, Math.floor(k / COLS) * ladoMapa, ladoMapa - vao, ladoMapa - vao);
+      if (base === "cheio") cheios++;
+      if (base === "vazio") vazios++;
+      if (base === "pausa" && anterior !== "pausa") pausas++;
+      anterior = base;
+    });
+    document.getElementById("pCheios").textContent = cheios.toLocaleString("pt-BR");
+    document.getElementById("pVazios").textContent = vazios;
+    document.getElementById("pPausas").textContent = pausas;
+    document.getElementById("relogioMapa").textContent = hhmm(DIA.minutos[Math.max(0, Math.min(revelado, DIA.ultima + 1) - 1)]);
+  }
+
+  const pulso = document.getElementById("pulso");
+  function voltaDeLeitura() {
+    pulso.classList.add("aceso");
+    setTimeout(() => pulso.classList.remove("aceso"), 180);
+    if (revelado > DIA.ultima) { revelado = 0; }
+    else revelado = Math.min(DIA.ultima + 1, revelado + 22);
+    desenharMapa();
+    const espera = revelado > DIA.ultima ? 5000 : 650;
+    setTimeout(voltaDeLeitura, espera);
+  }
+
+  // ======================================================================
+  //  4 · AS REGRAS, situação a situação
+  // ======================================================================
+  const repetir = (s, n) => Array(n).fill(s);
+  const CENARIOS = {
+    andando: {
+      raw: Array.from({ length: 48 }, (_, k) => [5, 19, 20, 33, 41].includes(k) ? "V" : "C"),
+      tarde: false,
+      texto: () => "Vazio solto é suíno que faltou. Fica vermelho e entra no tempo perdido."
+    },
+    parada: {
+      raw: [...repetir("C", 8), ...repetir("V", 34), ...repetir("C", 6)],
+      tarde: false,
+      texto: () => "30 ou mais vazios seguidos: a linha parou. A sequência vira pausa, com início e fim pelo relógio do CLP, e não entra no tempo perdido."
+    },
+    jato: {
+      raw: [...repetir("C", 6), ...repetir("V", 18), "C", ...repetir("V", 17), ...repetir("C", 6)],
+      tarde: false,
+      texto: (f) => f
+        ? "O jato d'água da lavagem passou no sensor e acendeu um verde falso (o quadrado contornado). Com o filtro, ele é descartado e a parada fica inteira."
+        : "Sem o filtro, o verde falso parte a parada em dois pedaços de menos de 30. Os dois viram vermelho e 35 vazios caem no tempo perdido."
+    },
+    fim: {
+      raw: [...repetir("C", 14), ...repetir("V", 3), ...repetir("C", 10), ...repetir("V", 8), "C", ...repetir("S", 12)],
+      tarde: true,
+      texto: (f) => f
+        ? "Depois das 16h, os vazios depois do último suíno são a nórea girando com o abate encerrado. O verde solto no último gancho é descartado. Os 3 vazios entre suínos continuam vermelhos."
+        : "Sem o filtro, o verde solto no último gancho conta como suíno, e os 8 vazios antes dele ficam vermelhos."
+    }
+  };
+
+  const faixaBruta = document.getElementById("faixaBruta");
+  const faixaFinal = document.getElementById("faixaFinal");
+  const filtro = document.getElementById("filtro");
+  const explica = document.getElementById("explica");
+  const horaCenario = document.getElementById("horaCenario");
+  for (const f of [faixaBruta, faixaFinal]) for (let k = 0; k < 48; k++) f.appendChild(document.createElement("span"));
+  let cenarioAtual = "andando";
+
+  function mostrarCenario() {
+    const c = CENARIOS[cenarioAtual];
+    const minutos = c.raw.map((_, k) => (c.tarde ? 16 * 60 + 5 : 10 * 60) + k * 0.19);
+    const classes = classificar(c.raw, minutos, filtro.checked);
+    c.raw.forEach((r, k) => {
+      faixaBruta.children[k].className = r === "C" ? "cheio" : r === "V" ? "vazio" : "";
+      faixaFinal.children[k].className = classes[k] === "semdado" ? "" : classes[k];
+    });
+    horaCenario.textContent = c.tarde ? "depois das 16h" : "manhã";
+    explica.textContent = c.texto(filtro.checked);
+  }
+  document.querySelectorAll("[data-cenario]").forEach((b) => b.addEventListener("click", () => {
+    cenarioAtual = b.dataset.cenario;
+    document.querySelectorAll("[data-cenario]").forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+    mostrarCenario();
+  }));
+  filtro.addEventListener("change", mostrarCenario);
+
+  // ======================================================================
+  //  5 · A CONTA
+  // ======================================================================
+  const vaziosEl = document.getElementById("vazios"), taxaEl = document.getElementById("taxa");
+  function conta() {
+    const v = +vaziosEl.value, t = +taxaEl.value;
+    const min = v / (t / 60);
+    document.getElementById("vaziosValor").textContent = v;
+    document.getElementById("taxaValor").textContent = t;
+    document.getElementById("perdido").textContent = fmt1(min);
+    document.getElementById("formula").textContent =
+      `${v} vazios ÷ (${t} ÷ 60) = ${v} ÷ ${fmt1(t / 60)} por minuto = ${fmt1(min)} min`;
+  }
+  vaziosEl.addEventListener("input", conta);
+  taxaEl.addEventListener("input", conta);
+
+  // ======================================================================
+  //  6 · UMA SEMANA NO HISTÓRICO (miniaturas de exemplo)
+  // ======================================================================
+  const diasEl = document.getElementById("dias");
+  const NOMES = ["seg", "ter", "qua", "qui", "sex", "sáb", "dom"];
+  const miniaturas = NOMES.map((nome, d) => {
+    const div = document.createElement("div");
+    const c = document.createElement("canvas");
+    const s = document.createElement("span");
+    s.textContent = nome;
+    div.append(c, s);
+    diasEl.appendChild(div);
+    return { c, d };
+  });
+  function desenharSemana() {
+    for (const { c, d } of miniaturas) {
+      const cols = 24, lins = 20, lado = 3;
+      c.width = cols * lado; c.height = lins * lado;
+      const gx = c.getContext("2d");
+      const tinta = { C: cor("cheio"), V: cor("vazio"), P: cor("pausa"), F: cor("fora"), S: cor("semdado") };
+      const domingo = d === 6, sabado = d === 5;
+      for (let k = 0; k < cols * lins; k++) {
+        let t = "S";
+        if (!domingo) {
+          const fimDoDia = sabado ? 200 : 440;
+          if (k < fimDoDia) {
+            t = sorteio(k * 13 + d * 977) % 100 < 6 ? "V" : "C";
+            const p = (k + d * 17) % 110;
+            if (!sabado && k > 60 && p < 9) t = "P";
+            if (!sabado && k >= 230 && k < 262) t = "P";
+          } else if (k < fimDoDia + 14) t = "F";
+        }
+        gx.fillStyle = tinta[t];
+        gx.fillRect((k % cols) * lado, Math.floor(k / cols) * lado, lado, lado);
+      }
+    }
+  }
+
+  // ======================================================================
+  //  7 · O DIA, DAS 6H ÀS 21H
+  // ======================================================================
+  const regua = document.getElementById("regua");
+  const H0 = 6, H1 = 21;
+  const pos = (h) => ((h - H0) / (H1 - H0) * 100) + "%";
+  function trecho(de, ate, nome, opacidade) {
+    const t = document.createElement("div");
+    t.className = "trecho";
+    t.style.left = pos(de); t.style.width = `calc(${pos(ate)} - ${pos(de)})`;
+    t.style.background = `var(--${nome})`; t.style.opacity = opacidade;
+    regua.appendChild(t);
+  }
+  trecho(7, 16, "cheio", 0.55);
+  trecho(16, 17, "fora", 0.8);
+  trecho(18, 20, "accent", 0.55);
+  for (const h of [7, 16, 18, 20]) {
+    const m = document.createElement("div");
+    m.className = "marco"; m.style.left = pos(h);
+    regua.appendChild(m);
+  }
+  const agulha = document.createElement("div");
+  agulha.className = "agulha";
+  regua.appendChild(agulha);
+  const eventos = [...document.querySelectorAll("#eventos li")];
+
+  function posicionarAgulha(h) {
+    agulha.style.left = pos(h);
+    agulha.dataset.hora = hhmm(h * 60);
+    eventos.forEach((li) => li.classList.toggle("ativo", h >= +li.dataset.de && h < +li.dataset.ate));
+  }
+
+  // ======================================================================
+  //  LAÇO E TEMA
+  // ======================================================================
+  function laco(agora) {
+    desenharNorea(agora);
+    if (!reduzido) {
+      const ciclo = 14000, f = ((agora - inicio) % ciclo) / ciclo;
+      posicionarAgulha(H0 + 0.6 + f * (H1 - H0 - 1.2));
+    }
+    requestAnimationFrame(laco);
+  }
+
+  function redesenharTudo() {
+    medirNorea();
+    medirMapa();
+    desenharMapa();
+    desenharSemana();
+  }
+
+  window.addEventListener("resize", redesenharTudo);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redesenharTudo);
+  new MutationObserver(redesenharTudo).observe(raiz, { attributes: true, attributeFilter: ["data-theme"] });
+
+  redesenharTudo();
+  mostrarCenario();
+  conta();
+  if (reduzido) { revelado = DIA.ultima + 1; desenharMapa(); posicionarAgulha(18.2); }
+  else setTimeout(voltaDeLeitura, 600);
+  requestAnimationFrame(laco);
+})();
+</script>
+
+</html>
